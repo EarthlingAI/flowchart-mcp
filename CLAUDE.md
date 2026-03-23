@@ -31,8 +31,8 @@ src/
 └── render.ts         # mermaid-isomorphic wrapper + file save
 ```
 
-- **`index.ts` is a thin dispatcher.** Tool schema (Zod), parameter handling, routing to `render.ts`. No rendering logic.
-- **`render.ts` owns all rendering concerns.** Mermaid renderer lifecycle (lazy singleton), PNG/SVG generation, background color application, file saving, filename sanitization.
+- **`index.ts` is a thin dispatcher.** Tool schema (Zod), parameter handling, preset resolution, routing to `render.ts`. No rendering logic. Presets live here (fat-files convention — single consumer).
+- **`render.ts` owns all rendering concerns.** Mermaid renderer lifecycle (lazy singleton), PNG/SVG generation, themeVariables pass-through, background color application, file saving, filename sanitization. Has no knowledge of presets — receives already-resolved `themeVariables`.
 
 ### Conventions
 

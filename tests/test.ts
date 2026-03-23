@@ -82,6 +82,62 @@ try {
 	passed++;
 }
 
+// --- themeVariables tests ---
+
+console.log("\nthemeVariables:");
+
+try {
+	const result = await renderDiagram(validDiagram, { theme: "base", themeVariables: { primaryColor: "#ff0000", primaryTextColor: "#ffffff" } });
+	assert(result.png instanceof Buffer && result.png.length > 0, "theme_variables returns PNG");
+	assert(result.svg.includes("<svg"), "theme_variables returns SVG");
+} catch (err) {
+	console.error(`  FAIL: theme_variables threw: ${err}`);
+	failed += 2;
+}
+
+try {
+	const corporatePreset = {
+		primaryColor: "#003366",
+		primaryTextColor: "#ffffff",
+		primaryBorderColor: "#002244",
+		secondaryColor: "#e6eef5",
+		lineColor: "#4a6785",
+		textColor: "#1a1a2e",
+		mainBkg: "#003366",
+		nodeBorder: "#002244",
+	};
+	const result = await renderDiagram(validDiagram, { theme: "base", themeVariables: corporatePreset });
+	assert(result.png instanceof Buffer && result.png.length > 0, "preset-like variables returns PNG");
+} catch (err) {
+	console.error(`  FAIL: preset-like variables threw: ${err}`);
+	failed++;
+}
+
+try {
+	const merged = { primaryColor: "#003366", primaryTextColor: "#ffffff", lineColor: "#ff0000" };
+	const result = await renderDiagram(validDiagram, { theme: "base", themeVariables: merged });
+	assert(result.png instanceof Buffer && result.png.length > 0, "preset + override combo returns PNG");
+} catch (err) {
+	console.error(`  FAIL: preset + override combo threw: ${err}`);
+	failed++;
+}
+
+try {
+	const result = await renderDiagram(validDiagram, { themeVariables: {} });
+	assert(result.png instanceof Buffer && result.png.length > 0, "empty themeVariables returns PNG (no crash)");
+} catch (err) {
+	console.error(`  FAIL: empty themeVariables threw: ${err}`);
+	failed++;
+}
+
+try {
+	const result = await renderDiagram(validDiagram, { theme: "base", themeVariables: { primaryColor: "#ff0000" }, backgroundColor: "#0a1929" });
+	assert(result.png instanceof Buffer && result.png.length > 0, "themeVariables + background color returns PNG");
+} catch (err) {
+	console.error(`  FAIL: themeVariables + background threw: ${err}`);
+	failed++;
+}
+
 // --- Summary ---
 
 console.log(`\n${passed} passed, ${failed} failed`);

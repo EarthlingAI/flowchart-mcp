@@ -5,6 +5,7 @@ import path from "node:path";
 export interface RenderOptions {
 	theme?: "default" | "base" | "forest" | "dark" | "neutral";
 	backgroundColor?: string;
+	themeVariables?: Record<string, string>;
 }
 
 export interface RenderResult {
@@ -28,6 +29,7 @@ export async function renderDiagram(mermaid: string, options?: RenderOptions): P
 		screenshot: true,
 		mermaidConfig: {
 			theme,
+			themeVariables: options?.themeVariables,
 		},
 	});
 
@@ -45,7 +47,7 @@ export async function renderDiagram(mermaid: string, options?: RenderOptions): P
 	// Apply background color if specified (screenshots are transparent by default)
 	let png = screenshot;
 	if (options?.backgroundColor && options.backgroundColor !== "transparent") {
-		png = await applyBackground(screenshot, svg, options.backgroundColor, render, mermaid, options.theme ?? "default");
+		png = await applyBackground(screenshot, svg, options.backgroundColor, render, mermaid, options.theme ?? "default", options.themeVariables);
 	}
 
 	return { png, svg };
@@ -58,11 +60,12 @@ async function applyBackground(
 	render: MermaidRenderer,
 	mermaid: string,
 	theme: RenderOptions["theme"],
+	themeVariables?: Record<string, string>,
 ): Promise<Buffer> {
 	// Re-render with background CSS injected via containerStyle
 	const results = await render([mermaid], {
 		screenshot: true,
-		mermaidConfig: { theme: theme ?? "default" },
+		mermaidConfig: { theme: theme ?? "default", themeVariables },
 		containerStyle: {
 			backgroundColor,
 			maxHeight: "",
