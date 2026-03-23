@@ -1,0 +1,30 @@
+{
+	"name": "flowchart-mcp",
+	"version": "1.0.0",
+	"description": "Mermaid diagram rendering MCP server. Renders to PNG or SVG locally via headless Chromium.",
+	"author": "EarthlingAI",
+	"license": "MIT",
+	"type": "module",
+	"main": "dist/index.js",
+	"bin": {
+		"flowchart-mcp": "dist/index.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"dev": "tsx watch src/index.ts",
+		"postinstall": "playwright install --with-deps chromium",
+		"test": "tsx tests/test.ts"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.17.5",
+		"mermaid-isomorphic": "^3.1.0",
+		"playwright": "^1.58.0",
+		"zod": "^3.25.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.2"
+	}
+}
