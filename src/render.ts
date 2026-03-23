@@ -79,7 +79,7 @@ async function applyBackground(
 	return _originalPng;
 }
 
-const OUTPUT_DIR = path.resolve(process.env["OUTPUT_DIR"] ?? "outputs");
+const OUTPUT_DIR = path.resolve(process.env["OUTPUT_DIR"] ?? "outputs/diagrams");
 
 export async function saveDiagram(png: Buffer, hint?: string): Promise<string> {
 	await mkdir(OUTPUT_DIR, { recursive: true });
