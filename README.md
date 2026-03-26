@@ -12,7 +12,7 @@ node dist/index.js         # start via stdio
 
 ## Tool: `generate_diagram`
 
-Render Mermaid syntax to an image. PNG (default): saved to disk and returned inline. SVG: returned as editable text.
+Render Mermaid syntax to an image. PNG (default): saved to disk at configurable resolution (scale 1-4) with preview returned inline. SVG: returned as editable text.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -21,6 +21,7 @@ Render Mermaid syntax to an image. PNG (default): saved to disk and returned inl
 | `preset` | enum | (optional) | Named color preset. Forces theme to `base`. See Presets table below |
 | `theme_variables` | object | (optional) | Mermaid themeVariables overrides (hex colors). Merges on top of preset. Forces theme to `base` |
 | `background_color` | string | `"white"` | CSS background color. `"transparent"` for no background |
+| `scale` | number | `2` | PNG resolution multiplier (1-4). Higher = sharper but larger file. At scale > 1, full-res saved to disk, preview thumbnail returned inline. Ignored for SVG |
 | `output` | enum | `"png"` | `png`: saved to disk + returned inline. `svg`: editable SVG text |
 
 ### Annotations

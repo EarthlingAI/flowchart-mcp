@@ -138,6 +138,57 @@ try {
 	failed++;
 }
 
+// --- scale parameter tests ---
+
+console.log("\nscale parameter:");
+
+try {
+	const result1x = await renderDiagram(validDiagram, { scale: 1 });
+	const result2x = await renderDiagram(validDiagram, { scale: 2 });
+	assert(result2x.png.length > result1x.png.length, "scale=2 produces larger PNG than scale=1");
+	assert(result2x.thumbnail instanceof Buffer, "scale=2 includes thumbnail");
+	assert(!result1x.thumbnail, "scale=1 has no thumbnail");
+} catch (err) {
+	console.error(`  FAIL: scale comparison threw: ${err}`);
+	failed += 3;
+}
+
+try {
+	const result = await renderDiagram(validDiagram, { scale: 1 });
+	assert(result.width > 0, "scale=1 has positive width");
+	assert(result.height > 0, "scale=1 has positive height");
+} catch (err) {
+	console.error(`  FAIL: scale=1 dimensions threw: ${err}`);
+	failed += 2;
+}
+
+try {
+	const r1 = await renderDiagram(validDiagram, { scale: 1 });
+	const r2 = await renderDiagram(validDiagram, { scale: 2 });
+	assertEqual(r2.width, r1.width * 2, "scale=2 width is 2x scale=1");
+	assertEqual(r2.height, r1.height * 2, "scale=2 height is 2x scale=1");
+} catch (err) {
+	console.error(`  FAIL: scale dimension ratio threw: ${err}`);
+	failed += 2;
+}
+
+try {
+	const result = await renderDiagram(validDiagram, { scale: 3 });
+	assert(result.thumbnail!.length < result.png.length, "thumbnail is smaller than full-res PNG");
+} catch (err) {
+	console.error(`  FAIL: thumbnail size threw: ${err}`);
+	failed++;
+}
+
+try {
+	const result = await renderDiagram(validDiagram, { scale: 2, backgroundColor: "#0a1929" });
+	assert(result.png instanceof Buffer && result.png.length > 0, "scale + background returns PNG");
+	assert(result.thumbnail instanceof Buffer, "scale + background includes thumbnail");
+} catch (err) {
+	console.error(`  FAIL: scale + background threw: ${err}`);
+	failed += 2;
+}
+
 // --- Summary ---
 
 console.log(`\n${passed} passed, ${failed} failed`);

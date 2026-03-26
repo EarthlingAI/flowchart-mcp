@@ -124,7 +124,7 @@ const PresetEnum = z.enum(["earthling", "corporate", "blueprint", "pastel", "mon
 server.registerTool(
 	"generate_diagram",
 	{
-		description: "Render Mermaid syntax to an image. PNG (default): saved to disk and returned inline. SVG: returned as editable text.",
+		description: "Render Mermaid syntax to an image. PNG (default): saved to disk at configurable resolution (scale 1-4) with preview returned inline. SVG: returned as editable text.",
 		inputSchema: {
 			mermaid: z.string().min(1).describe("Mermaid diagram syntax"),
 			theme: ThemeEnum.default("default").describe("Mermaid theme. Ignored when preset or theme_variables is provided (forced to 'base')"),
@@ -134,6 +134,8 @@ server.registerTool(
 				.describe("Mermaid themeVariables overrides (hex colors). Merges on top of preset. Forces theme to 'base'. Common keys: primaryColor, primaryTextColor, primaryBorderColor, secondaryColor, lineColor, textColor, fontFamily, mainBkg, nodeBorder"),
 			background_color: z.string().default("white")
 				.describe("CSS background color for PNG output. Use 'transparent' for no background"),
+			scale: z.number().min(1).max(4).default(2)
+				.describe("PNG resolution multiplier (1-4). Higher = sharper but larger file. At scale > 1, full-res is saved to disk and a preview thumbnail is returned inline. Ignored for SVG output"),
 			output: z.enum(["png", "svg"]).default("png")
 				.describe("png: image saved to disk + returned inline. svg: returns editable SVG text"),
 		},
@@ -167,6 +169,7 @@ server.registerTool(
 				theme: resolvedTheme,
 				backgroundColor: params.background_color,
 				themeVariables,
+				scale: params.scale,
 			};
 			const result = await renderDiagram(mermaidSyntax, renderOpts);
 
@@ -176,12 +179,16 @@ server.registerTool(
 				};
 			}
 
-			// PNG: save to disk + return inline
+			// PNG: save full-res to disk, return thumbnail inline when scale > 1
 			const filePath = await saveDiagram(result.png, mermaidSyntax.slice(0, 80));
+			const sizeKB = (result.png.length / 1024).toFixed(0);
+			const dims = `${result.width}x${result.height}`;
+			const inlinePng = result.thumbnail ?? result.png;
+
 			return {
 				content: [
-					{ type: "text" as const, text: `Diagram saved to: ${filePath}` },
-					{ type: "image" as const, data: result.png.toString("base64"), mimeType: "image/png" },
+					{ type: "text" as const, text: `Diagram saved to: ${filePath} (${dims}, ${sizeKB}KB)` },
+					{ type: "image" as const, data: inlinePng.toString("base64"), mimeType: "image/png" },
 				],
 			};
 		} catch (error) {
