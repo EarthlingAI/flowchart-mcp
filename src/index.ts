@@ -16,7 +16,7 @@ const server = new McpServer(
 
 const PRESETS: Record<string, Record<string, string>> = {
   // indigo rectangles / teal rounded / rose diamonds — EarthlingAI brand palette
-  casual: {
+  primary: {
     primaryColor: "#bac8ff", // indigo-200 — rectangles
     primaryTextColor: "#1e1b4b", // indigo-950 — dark; pairs with light node fills + light edge label bg
     primaryBorderColor: "#4263eb", // indigo-600
@@ -35,7 +35,7 @@ const PRESETS: Record<string, Record<string, string>> = {
     noteBorderColor: "#4263eb",
   },
   // strong blue rectangles / sky-blue rounded / light-grey diamonds — Atlassian/Tailwind corporate
-  corporate: {
+  professional: {
     primaryColor: "#1d4ed8", // blue-700 — rectangles (strong, authoritative)
     primaryTextColor: "#ffffff", // white; pairs with dark node fill + dark edge label bg
     primaryBorderColor: "#1e3a8a", // blue-900
@@ -131,19 +131,6 @@ const PRESETS: Record<string, Record<string, string>> = {
   },
 };
 
-/**
- * Default flowchart/graph diagrams to LR (landscape) when no explicit
- * direction is provided. Respects any user-specified direction (TB, TD, BT, RL).
- */
-function ensureDirection(mermaid: string): string {
-  const directionPattern = /^(flowchart|graph)(\s+(TB|TD|BT|RL|LR))?(\s|$)/i;
-  const match = mermaid.match(directionPattern);
-  if (!match) return mermaid; // not a flowchart/graph — leave as-is
-  if (match[3]) return mermaid; // explicit direction already set
-  // No direction specified — inject LR after the keyword
-  return mermaid.replace(/^(flowchart|graph)/i, "$1 LR");
-}
-
 server.registerTool(
   "generate_diagram",
   {
@@ -157,16 +144,16 @@ server.registerTool(
           "forest",
           "dark",
           "neutral",
-          "casual",
-          "corporate",
+          "primary",
+          "professional",
           "blueprint",
           "pastel",
           "monochrome",
           "high-contrast",
         ])
-        .default("casual")
+        .default("primary")
         .describe(
-          "Visual style. Built-in Mermaid themes (default, forest, dark, neutral) or a named preset with pre-vetted contrast ratios (casual, corporate, blueprint, pastel, monochrome, high-contrast)",
+          "Visual style. Built-in Mermaid themes (default, forest, dark, neutral) or a named preset with pre-vetted contrast ratios (primary, professional, blueprint, pastel, monochrome, high-contrast)",
         ),
       scale: z
         .number()
@@ -182,6 +169,22 @@ server.registerTool(
         .describe(
           "png: image saved to disk + returned inline. svg: returns editable SVG text",
         ),
+      stylingOverrides: z
+        .record(z.string(), z.string())
+        .optional()
+        .describe(
+          "Override specific Mermaid themeVariables on top of the selected style. " +
+            "Applied after the base style — only specified keys are changed. " +
+            "Works with both preset styles and built-in Mermaid themes. " +
+            "Common flowchart keys — " +
+            "nodes: primaryColor, primaryTextColor, primaryBorderColor, secondaryColor, secondaryTextColor, secondaryBorderColor, tertiaryColor, tertiaryTextColor, tertiaryBorderColor, nodeTextColor, nodeBorder, clusterBkg, clusterBorder; " +
+            "edges: lineColor, defaultLinkColor, arrowheadColor; " +
+            "edge labels: edgeLabelBackground (bg), relationLabelColor (text), relationLabelBackground; " +
+            "general: textColor, labelTextColor, titleColor, background; " +
+            "notes: noteBkgColor, noteTextColor, noteBorderColor. " +
+            "Any valid Mermaid themeVariable key is accepted (200+ available for sequence, Gantt, git graph, pie, etc.). " +
+            "Values: CSS color strings (hex, rgb, named).",
+        ),
     },
     annotations: {
       readOnlyHint: false,
@@ -191,7 +194,7 @@ server.registerTool(
     },
   },
   async (params) => {
-    const mermaidSyntax = ensureDirection(params.mermaid.trim());
+    const mermaidSyntax = params.mermaid.trim();
     if (!mermaidSyntax) {
       return {
         content: [
@@ -205,12 +208,13 @@ server.registerTool(
     }
 
     try {
+      const baseVars = PRESETS[params.style];
       const renderOpts: RenderOptions = {
-        theme: PRESETS[params.style]
+        theme: baseVars
           ? "base"
           : (params.style as "default" | "forest" | "dark" | "neutral"),
         backgroundColor: "white",
-        themeVariables: PRESETS[params.style],
+        themeVariables: { ...baseVars, ...params.stylingOverrides },
         scale: params.scale,
       };
       const result = await renderDiagram(mermaidSyntax, renderOpts);
